@@ -2,6 +2,7 @@
   "name": "zazaradio",
   "main": "expo-router/entry",
   "version": "1.0.0",
+  "private": true,
   "scripts": {
     "start": "expo start",
     "reset-project": "node ./scripts/reset-project.js",
@@ -32,18 +33,16 @@
     "expo-web-browser": "~14.1.6",
     "lucide-react-native": "^0.511.0",
     "react": "19.0.0",
-    "react-dom": "19.0.0",
+    "react-dom": "^19.1.0",
     "react-native": "0.79.2",
     "react-native-gesture-handler": "~2.24.0",
     "react-native-reanimated": "~3.17.4",
     "react-native-safe-area-context": "5.4.0",
     "react-native-screens": "~4.10.0",
     "react-native-svg": "^15.11.2",
-    "react-native-track-player": "^4.1.1",
     "react-native-vector-icons": "^10.2.0",
     "react-native-web": "~0.20.0",
     "react-native-webview": "13.13.5",
-    "@react-native-community/cli": "latest",
     "shaka-player": "^4.14.14"
   },
   "devDependencies": {
@@ -53,6 +52,5 @@
     "eslint": "^9.25.0",
     "eslint-config-expo": "~9.2.0",
     "typescript": "~5.8.3"
-  },
-  "private": true
+  }
 }
