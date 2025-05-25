@@ -1,45 +1,45 @@
 // RadioStreamApp.tsx
 
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Dimensions, FlatList, Image, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import TrackPlayer, { Capability, State, usePlaybackState } from 'react-native-track-player';
+import { ActivityIndicator, Dimensions, FlatList, ImageBackground, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import TrackPlayer, { Capability, State, State as TrackPlayerState, usePlaybackState } from 'react-native-track-player';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
+const randomImages = [
+  { uri: "https://picsum.photos/800?nature" },
+  { uri: "https://picsum.photos/800?music" },
+  { uri: "https://picsum.photos/800?radio" },
+];
 const { width } = Dimensions.get('window');
 
-const artistImages = [
-  "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=600&fit=crop",
-  "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&h=600&fit=crop",
-  "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=600&fit=crop",
-  "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=600&fit=crop",
-  "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=600&fit=crop"
-];
-
 const setupPlayer = async () => {
-  if (Platform.OS === 'android') {
-    await TrackPlayer.setupPlayer();
-    TrackPlayer.updateOptions({
-      capabilities: [Capability.Play, Capability.Pause, Capability.Stop],
-    });
-  }
+  await TrackPlayer.setupPlayer();
+  TrackPlayer.updateOptions({
+    capabilities: [Capability.Play, Capability.Pause, Capability.Stop],
+  });
 };
 
+interface Station {
+  name: string;
+  url: string;
+}
+
 const RadioStreamApp = () => {
-  const [stations, setStations] = useState([]);
+  const [stations, setStations] = useState<Station[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [currentStation, setCurrentStation] = useState<number | null>(null);
   const [imageIndex, setImageIndex] = useState(0);
-  const playbackState = usePlaybackState();
+  const playbackState = usePlaybackState() as unknown as TrackPlayerState;
 
   useEffect(() => {
     setupPlayer();
 
     const interval = setInterval(() => {
-      setImageIndex((prev) => (prev + 1) % artistImages.length);
-    }, 3000);
+      setImageIndex((prevIndex) => (prevIndex + 1) % randomImages.length);
+    }, 5000); // Change image every 3 seconds
 
-    return () => clearInterval(interval);
+    return () => clearInterval(interval); // Cleanup interval on unmount
   }, []);
 
   useEffect(() => {
@@ -68,51 +68,37 @@ const RadioStreamApp = () => {
     fetchStations();
   }, []);
 
-  const playStation = async (station: any, index: number) => {
-    if (Platform.OS === 'android') {
-      try {
-        await TrackPlayer.reset();
-        await TrackPlayer.add({
-          id: station.name,
-          url: station.url,
-          title: station.name,
-          artist: 'Live Stream',
-        });
-        await TrackPlayer.play();
-        setCurrentStation(index);
-      } catch (e) {
-        console.error('Playback error:', e);
-      }
-    } else {
-      // Web-specific playback logic
-      const audio = new Audio(station.url);
-      audio.play();
+  const playStation = async (station: Station, index: number) => {
+    try {
+      await TrackPlayer.reset();
+      await TrackPlayer.add({
+        id: station.name,
+        url: station.url,
+        title: station.name,
+        artist: 'Live Stream',
+      });
+      await TrackPlayer.play();
       setCurrentStation(index);
+    } catch (e) {
+      console.error('Playback error:', e);
     }
   };
 
   const togglePlayPause = async () => {
-    if (Platform.OS === 'android') {
-      const state = await TrackPlayer.getState();
-      if (state === State.Playing) {
-        await TrackPlayer.pause();
-      } else {
-        await TrackPlayer.play();
-      }
+    const state = await TrackPlayer.getState();
+    if (state === State.Playing) {
+      await TrackPlayer.pause();
     } else {
-      // Web-specific play/pause logic
+      await TrackPlayer.play();
     }
   };
 
   const stopPlayback = async () => {
-    if (Platform.OS === 'android') {
-      await TrackPlayer.stop();
-    } else {
-      // Web-specific stop logic
-    }
+    await TrackPlayer.stop();
+    setCurrentStation(null); // Reset current station
   };
 
-  const renderStation = ({ item, index }) => (
+  const renderStation = ({ item, index }: { item: Station, index: number }) => (
     <TouchableOpacity
       onPress={() => playStation(item, index)}
       style={[
@@ -120,28 +106,30 @@ const RadioStreamApp = () => {
         currentStation === index && styles.activeStation
       ]}
     >
-      <Image
-        source={{ uri: artistImages[index % artistImages.length] }}
-        style={styles.stationImage}
-      />
+      <Ionicons name="radio" size={40} color="#fff" style={styles.radioIcon} />
       <Text style={styles.stationName}>{item.name}</Text>
     </TouchableOpacity>
   );
 
   return (
     <View style={styles.container}>
-      <Image source={{ uri: artistImages[imageIndex] }} style={styles.heroImage} />
+      <ImageBackground
+        source={randomImages[imageIndex]}
+        style={styles.headerImage}
+        imageStyle={{
+          borderBottomLeftRadius: 20,
+          borderBottomRightRadius: 20,
+        }}
+      
+      >
+        {/* Other header content */}
+      </ImageBackground>
+      <Text style={styles.title}>Radio Stations</Text>
+      <Text style={styles.subtitle}>
+        {loading ? "Loading..." : `${stations.length} available`}
+      </Text>
 
-      <View style={styles.header}>
-        <Text style={styles.title}>Radio Stations</Text>
-        <Text style={styles.subtitle}>
-          {loading ? 'Loading...' : `${stations.length} available`}
-        </Text>
-      </View>
-
-      {error !== '' && (
-        <Text style={styles.errorText}>Error: {error}</Text>
-      )}
+      {error !== "" && <Text style={styles.errorText}>Error: {error}</Text>}
 
       {loading ? (
         <ActivityIndicator size="large" color="#fff" />
@@ -157,7 +145,7 @@ const RadioStreamApp = () => {
       <View style={styles.controls}>
         <TouchableOpacity onPress={togglePlayPause}>
           <Ionicons
-            name={playbackState === State.Playing ? 'pause' : 'play'}
+            name={playbackState === State.Playing ? "pause" : "play"}
             size={36}
             color="#fff"
           />
@@ -178,13 +166,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#000',
     paddingTop: 40,
   },
-  heroImage: {
-    width,
+  headerImage: {
+    width: '100%',
     height: 200,
-    resizeMode: 'cover',
-  },
-  header: {
+    justifyContent: 'flex-end',
     padding: 16,
+    backgroundColor: '#000',
+    paddingBottom: 20,
   },
   title: {
     fontSize: 28,
@@ -215,10 +203,11 @@ const styles = StyleSheet.create({
   activeStation: {
     backgroundColor: '#444',
   },
-  stationImage: {
+  radioIcon: {
     width: 50,
     height: 50,
-    borderRadius: 8,
+    textAlign: 'center',
+    textAlignVertical: 'center',
     marginRight: 10,
   },
   stationName: {
@@ -229,8 +218,10 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 30,
     alignSelf: 'center',
+    flexDirection: 'row',
     backgroundColor: '#333',
-    padding: 12,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
     borderRadius: 50,
   },
 });
