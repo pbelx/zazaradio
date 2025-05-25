@@ -178,10 +178,14 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: 'bold',
     color: '#fff',
+    paddingTop: 10,
+    paddingHorizontal: 16,
   },
   subtitle: {
     color: '#aaa',
     marginTop: 4,
+    paddingHorizontal: 16,
+    paddingBottom: 10,
   },
   errorText: {
     color: 'red',
